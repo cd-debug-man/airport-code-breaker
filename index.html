@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Airport Code Guesser</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <style>
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body {
+      background: #0f172a;
+      color: #f8fafc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 1rem;
+    }
+    .card {
+      background: #1e293b;
+      padding: 2rem;
+      border-radius: 1rem;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+    .score-board {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      color: #94a3b8;
+      margin-bottom: 1.5rem;
+    }
+    .city-prompt {
+      font-size: 1.4rem;
+      font-weight: 700;
+      min-height: 4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+    input {
+      width: 100%;
+      padding: 0.75rem;
+      font-size: 1.5rem;
+      text-transform: uppercase;
+      text-align: center;
+      letter-spacing: 0.25rem;
+      border: 2px solid #334155;
+      border-radius: 0.5rem;
+      background: #0f172a;
+      color: #fff;
+      outline: none;
+      margin-bottom: 1rem;
+    }
+    input:focus { border-color: #38bdf8; }
+    button {
+      width: 100%;
+      padding: 0.75rem;
+      font-size: 1rem;
+      font-weight: 600;
+      background: #38bdf8;
+      color: #0f172a;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+    }
+    button:active { transform: scale(0.98); }
+    .message {
+      margin-top: 1rem;
+      font-weight: 600;
+      min-height: 1.5rem;
+    }
+    .correct { color: #4ade80; }
+    .wrong { color: #f87171; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="score-board">
+      <span>Score: <b id="score">0</b></span>
+      <span>Streak: <b id="streak">0</b> 🔥</span>
+    </div>
+
+    <div class="city-prompt" id="prompt">Loading...</div>
+
+    <form id="game-form" onsubmit="handleGuess(event)">
+      <input type="text" id="guess" maxlength="3" placeholder="___" autofocus autocomplete="off" autocorrect="off" autocapitalize="characters" />
+      <button type="submit">Submit</button>
+    </form>
+
+    <div class="message" id="message"></div>
+  </div>
+
+  <script>
+    const airports = [
+      { code: "LHR", city: "London (Heathrow), UK" },
+      { code: "HND", city: "Tokyo (Haneda), Japan" },
+      { code: "ORD", city: "Chicago (O'Hare), USA" },
+      { code: "CDG", city: "Paris (Charles de Gaulle), France" },
+      { code: "DXB", city: "Dubai, UAE" },
+      { code: "SIN", city: "Singapore" },
+      { code: "SYD", city: "Sydney, Australia" },
+      { code: "AMS", city: "Amsterdam, Netherlands" },
+      { code: "JFK", city: "New York (JFK), USA" },
+      { code: "YYZ", city: "Toronto (Pearson), Canada" },
+      { code: "ICN", city: "Seoul (Incheon), South Korea" },
+      { code: "FRA", city: "Frankfurt, Germany" },
+      { code: "LAX", city: "Los Angeles, USA" },
+      { code: "GRU", city: "São Paulo, Brazil" },
+      { code: "CPT", city: "Cape Town, South Africa" },
+      { code: "BOS", city: "Boston (Logan), USA" },
+      { code: "PVD", city: "Providence (T.F. Green), USA" },
+      { code: "SFO", city: "San Francisco, USA" }
+    ];
+
+    let currentAirport = null;
+    let score = 0;
+    let streak = 0;
+
+    function nextQuestion() {
+      currentAirport = airports[Math.floor(Math.random() * airports.length)];
+      document.getElementById("prompt").innerText = currentAirport.city;
+      const input = document.getElementById("guess");
+      input.value = "";
+      input.focus();
+    }
+
+    function handleGuess(e) {
+      e.preventDefault();
+      const input = document.getElementById("guess");
+      const userGuess = input.value.trim().toUpperCase();
+      const msg = document.getElementById("message");
+
+      if (!userGuess) return;
+
+      if (userGuess === currentAirport.code) {
+        score += 10;
+        streak += 1;
+        msg.className = "message correct";
+        msg.innerText = `Correct! (${currentAirport.code})`;
+      } else {
+        streak = 0;
+        msg.className = "message wrong";
+        msg.innerText = `Incorrect! It was ${currentAirport.code}`;
+      }
+
+      document.getElementById("score").innerText = score;
+      document.getElementById("streak").innerText = streak;
+
+      setTimeout(() => {
+        msg.innerText = "";
+        nextQuestion();
+      }, 1200);
+    }
+
+    // Register Service Worker for offline play
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch(() => {});
+      });
+    }
+
+    nextQuestion();
+  </script>
+</body>
+</html>
